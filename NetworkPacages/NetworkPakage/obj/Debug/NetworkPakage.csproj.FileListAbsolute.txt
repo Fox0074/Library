@@ -1,0 +1,8 @@
+C:\Users\Admin\Documents\Library\NetworkPacages\NetworkPakage\bin\Debug\NetworkPakage.exe
+C:\Users\Admin\Documents\Library\NetworkPacages\NetworkPakage\bin\Debug\NetworkPakage.pdb
+C:\Users\Admin\Documents\Library\NetworkPacages\NetworkPakage\obj\Debug\NetworkPakage.csprojAssemblyReference.cache
+C:\Users\Admin\Documents\Library\NetworkPacages\NetworkPakage\obj\Debug\NetworkPakage.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Documents\Library\NetworkPacages\NetworkPakage\obj\Debug\NetworkPakage.exe
+C:\Users\Admin\Documents\Library\NetworkPacages\NetworkPakage\obj\Debug\NetworkPakage.pdb
+C:\Users\Admin\Documents\Library\NetworkPacages\NetworkPakage\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Admin\Documents\Library\NetworkPacages\NetworkPakage\obj\Debug\NetworkPakage.csproj.CopyComplete

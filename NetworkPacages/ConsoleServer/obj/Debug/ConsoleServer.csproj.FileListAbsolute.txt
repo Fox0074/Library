@@ -1,0 +1,6 @@
+C:\Users\Admin\Documents\Library\NetworkPacages\ConsoleServer\bin\Debug\ConsoleServer.exe
+C:\Users\Admin\Documents\Library\NetworkPacages\ConsoleServer\bin\Debug\ConsoleServer.pdb
+C:\Users\Admin\Documents\Library\NetworkPacages\ConsoleServer\obj\Debug\ConsoleServer.csprojAssemblyReference.cache
+C:\Users\Admin\Documents\Library\NetworkPacages\ConsoleServer\obj\Debug\ConsoleServer.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Documents\Library\NetworkPacages\ConsoleServer\obj\Debug\ConsoleServer.exe
+C:\Users\Admin\Documents\Library\NetworkPacages\ConsoleServer\obj\Debug\ConsoleServer.pdb

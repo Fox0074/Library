@@ -1,0 +1,38 @@
+*.sln
+*.csproj
+*.userprefs
+*.pidb
+*.unityproj
+*.DS_Store
+*.suo
+/Library/
+/obj
+/Temp
+/Builds
+#Protect stuff
+!/Protect/*.sln
+!/Protect/Protect/*.csproj
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+# Build results
+/Protect/Protect/[Dd]ebug/
+/Protect/Protect/[Dd]ebugPublic/
+/Protect/Protect/[Rr]elease/
+/Protect/Protect/[Rr]eleases/
+/Protect/Protect/x64/
+/Protect/Protect/x86/
+/Protect/Protect/bld/
+/Protect/Protect/[Bb]in/
+/Protect/Protect/[Oo]bj/
+/Protect/Protect/[Ll]og/
+# Visual Studio 2015 cache/options directory
+/Protect/.vs/
+/.vs/
+
+#Setup output
+*[Ss]etup*.exe
+
+#Remote education package
+*.zip
