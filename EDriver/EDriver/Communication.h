@@ -15,6 +15,7 @@ typedef struct _KERNEL_READ_REQUEST
 {
 	ULONG ProcessId;
 	ULONG Address;
+	ULONG Address2;
 	PVOID pBuff;
 	ULONG Size;
 

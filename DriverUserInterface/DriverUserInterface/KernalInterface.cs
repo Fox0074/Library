@@ -11,21 +11,21 @@ namespace DriverUserInterface
 {
     public class KernalInterface
     {
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Explicit)]
         public unsafe struct _KERNEL_READ_REQUEST
         {
-            public long ProcessId;
-            public long Address;
-            public void* pBuff;
-            public long Size;
+            [FieldOffset(0)] public long ProcessId;
+            [FieldOffset(24)] public long Address;
+            [FieldOffset(32)] public long Address2;
+            [FieldOffset(8)] public long pBuffer;
+            [FieldOffset(16)] public long Size;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        //[StructLayout(LayoutKind.Explicit)]
         public unsafe struct _KERNEL_WRITE_REQUEST
         {
             public long ProcessId;
             public long Address;
-            public void* pBuff;
             public long Size;
         }
 
@@ -53,12 +53,12 @@ namespace DriverUserInterface
 
         [DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern Boolean DeviceIoControl(
+        private unsafe static extern Boolean DeviceIoControl(
                     IntPtr hDevice,
                     UInt32 dwIoControlCode,
-                    ref _KERNEL_READ_REQUEST lpInBuffer,
+                    _KERNEL_READ_REQUEST* lpInBuffer,
                     UInt32 nInBufferSize,
-                    out _KERNEL_READ_REQUEST lpOutBuffer,
+                    _KERNEL_READ_REQUEST* lpOutBuffer,
                     UInt32 nOutBufferSize,
                     ref UInt32 lpBytesReturned,
                     [In] ref NativeOverlapped lpOverlapped);
@@ -111,37 +111,42 @@ namespace DriverUserInterface
             return 0;
         }
 
+        uint i = 7;
         public unsafe void* ReadVirtualMemory(long processId, long readAddress, long size)
         {
+            _KERNEL_READ_REQUEST* readRequestLink;
             _KERNEL_READ_REQUEST readRequest;
-            void* readValue;
+            readRequestLink = &readRequest;
+            void* readValue = (void*)0;
 
             if (hDriver == (IntPtr)(-1))
             {
                 return (void*)0;
             }
-
+            i++;
             readRequest.ProcessId = processId;
-            readRequest.Address = readAddress;
-            readRequest.pBuff = &readValue;
-            readRequest.Size = size;
+            readRequest.Address = 150;
+            readRequest.Address2 = 151;
+            readRequest.pBuffer = 99;
+            readRequest.Size = 100;
+
 
             uint bytes = 0;
             var test = new NativeOverlapped();
 
             int size2 = Marshal.SizeOf(readRequest.GetType());
-            IntPtr ptr = Marshal.AllocHGlobal(size2);
-            Marshal.StructureToPtr(readRequest, ptr, false);
-            
+            //IntPtr ptr = Marshal.AllocHGlobal(size2);
+            //Marshal.StructureToPtr(readRequest, ptr, false);
 
+            var z = sizeof(_KERNEL_READ_REQUEST*);
 
             if (DeviceIoControl(
                 hDriver,
                 IoReadRequest(),
-                ref readRequest,
-                (uint)size2,
-                out readRequest,
-                (uint)size2,
+                readRequestLink,
+                32,
+                readRequestLink,
+                32,
                 ref bytes,
                 ref test))
             {

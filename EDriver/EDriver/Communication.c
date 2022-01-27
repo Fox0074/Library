@@ -35,11 +35,18 @@ NTSTATUS IoControl(PDEVICE_OBJECT deviceObject, PIRP irp)
 		case IO_READ_REQUEST:
 		{
 			PKERNEL_READ_REQUEST readInput = (PKERNEL_READ_REQUEST)irp->AssociatedIrp.SystemBuffer;
-
+			DebugMessage("sizeof(KERNEL_READ_REQUEST): %d \n", sizeof(KERNEL_READ_REQUEST));
+			DebugMessage("sizeof(KERNEL_READ_REQUEST): %d \n", &readInput);
 			PEPROCESS process;
 
 			if (NT_SUCCESS(PsLookupProcessByProcessId(readInput->ProcessId, &process)))
 			{
+				DebugMessage("readInputPID: %d \n", readInput->ProcessId);
+				DebugMessage("readInput Address: %d \n", readInput->Address);
+				DebugMessage("readInput Address: %d \n", readInput->Address2);
+				DebugMessage("readInput pBuff: %p \n", readInput->pBuff);
+				DebugMessage("readInput Size: %d \n", readInput->Size);
+
 				KernelReadVirtualMemory(process, readInput->Address, readInput->pBuff, readInput->Size);
 				status = STATUS_SUCCESS;
 
@@ -78,7 +85,7 @@ NTSTATUS IoControl(PDEVICE_OBJECT deviceObject, PIRP irp)
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
-		DebugMessage("Clent adress requested!\n");
+		DebugMessage("IoControlException!\n");
 		return status;
 	}
 }

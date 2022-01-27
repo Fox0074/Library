@@ -23,7 +23,7 @@ namespace DriverUserInterface
         {
             var driver = new KernalInterface("\\\\.\\guideeh");
             address = driver.GetClientAddress();
-            MessageBox.Show(address.ToString());
+            //MessageBox.Show(address.ToString());
         }
 
         private unsafe void button2_Click(object sender, EventArgs e)
