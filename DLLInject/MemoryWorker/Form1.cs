@@ -9,12 +9,18 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
+using Microsoft.Win32.SafeHandles;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Threading;
+
 namespace MemoryWorker
 {
     public partial class Form1 : Form
     {
         private List<Process> AllProcess = new List<Process>();
-        private Dictionary <int,Process> _filerProc = new Dictionary<int,Process>();
+        private Dictionary<int, Process> _filerProc = new Dictionary<int, Process>();
 
         public Form1()
         {
@@ -73,7 +79,7 @@ namespace MemoryWorker
             foreach (var proc in AllProcess)
             {
                 if (proc.ProcessName.ToLower().Contains(textBox2.Text.ToLower()))
-                    _filerProc.Add(AllProcess.IndexOf(proc),proc);
+                    _filerProc.Add(AllProcess.IndexOf(proc), proc);
             }
             listBox2.Items.AddRange(_filerProc.Values.Select(x => x.ProcessName).ToArray());
         }
