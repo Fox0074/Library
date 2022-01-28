@@ -22,6 +22,7 @@ typedef struct _KERNEL_READ_REQUEST
 } KERNEL_READ_REQUEST, * PKERNEL_READ_REQUEST;
 #pragma pack(pop)
 
+#pragma pack(push, 8)
 typedef struct _KERNEL_WRITE_REQUEST
 {
 	ULONGLONG ProcessId;
@@ -30,3 +31,4 @@ typedef struct _KERNEL_WRITE_REQUEST
 	ULONGLONG Size;
 
 } KERNEL_WRITE_REQUEST, * PKERNEL_WRITE_REQUEST;
+#pragma pack(pop)

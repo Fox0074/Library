@@ -35,21 +35,13 @@ NTSTATUS IoControl(PDEVICE_OBJECT deviceObject, PIRP irp)
 		case IO_READ_REQUEST:
 		{
 			PKERNEL_READ_REQUEST readInput = (PKERNEL_READ_REQUEST)irp->AssociatedIrp.SystemBuffer;
-			DebugMessage("sizeof(KERNEL_READ_REQUEST): %d \n", sizeof(KERNEL_READ_REQUEST));
-			DebugMessage("sizeof(KERNEL_READ_REQUEST): %d \n", &readInput);
 			PEPROCESS process;
 
 			if (NT_SUCCESS(PsLookupProcessByProcessId(readInput->ProcessId, &process)))
 			{
-				DebugMessage("readInputPID: %d \n", readInput->ProcessId);
-				DebugMessage("readInput Address: %d \n", readInput->Address);
-				DebugMessage("readInput pBuff: %p \n", readInput->pBuff);
-				DebugMessage("readInput Size: %d \n", readInput->Size);
-
 				KernelReadVirtualMemory(process, readInput->Address, readInput->pBuff, readInput->Size);
+				DebugMessage("Read Virtual Memory!\n");
 				status = STATUS_SUCCESS;
-
-
 				byteIO = sizeof(KERNEL_READ_REQUEST);
 			}
 
@@ -65,6 +57,7 @@ NTSTATUS IoControl(PDEVICE_OBJECT deviceObject, PIRP irp)
 			if (NT_SUCCESS(PsLookupProcessByProcessId(writeInput->ProcessId, &process)))
 			{
 				KernelWriteVirtualMemory(process, writeInput->pBuff, writeInput->Address, writeInput->Size);
+				DebugMessage("Write Virtual Memory!\n");
 				status = STATUS_SUCCESS;
 				byteIO = sizeof(KERNEL_READ_REQUEST);
 			}

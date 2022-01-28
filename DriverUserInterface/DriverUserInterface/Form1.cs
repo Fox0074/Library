@@ -30,7 +30,7 @@ namespace DriverUserInterface
         {
             var allProc = Process.GetProcesses();
             var driver = new KernalInterface("\\\\.\\guideeh");
-            var proc = allProc.FirstOrDefault(x => x.ProcessName == "Calculator");
+            var proc = allProc.FirstOrDefault(x => x.ProcessName == "PlayerMove");
             if (proc != null)
             {
                 var id = (long)proc.Id;
