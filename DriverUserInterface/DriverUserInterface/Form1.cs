@@ -30,11 +30,11 @@ namespace DriverUserInterface
         {
             var allProc = Process.GetProcesses();
             var driver = new KernalInterface("\\\\.\\guideeh");
-            var proc = allProc.FirstOrDefault(x => x.ProcessName == "PlayerMove");
+            var proc = allProc.FirstOrDefault(x => x.ProcessName == "Calculator");
             if (proc != null)
             {
                 var id = (long)proc.Id;
-                var value = driver.ReadVirtualMemory(id, address, 100);
+                var value = driver.ReadVirtualMemory(id, address, 8);
             }
 
         }

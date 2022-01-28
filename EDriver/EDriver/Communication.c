@@ -43,7 +43,6 @@ NTSTATUS IoControl(PDEVICE_OBJECT deviceObject, PIRP irp)
 			{
 				DebugMessage("readInputPID: %d \n", readInput->ProcessId);
 				DebugMessage("readInput Address: %d \n", readInput->Address);
-				DebugMessage("readInput Address: %d \n", readInput->Address2);
 				DebugMessage("readInput pBuff: %p \n", readInput->pBuff);
 				DebugMessage("readInput Size: %d \n", readInput->Size);
 

@@ -11,21 +11,22 @@ NTSTATUS CloseCall(PDEVICE_OBJECT deviceObject, PIRP irp);
 
 NTSTATUS CreateCall(PDEVICE_OBJECT deviceObject, PIRP irp);
 
+#pragma pack(push, 8)
 typedef struct _KERNEL_READ_REQUEST
 {
-	ULONG ProcessId;
-	ULONG Address;
-	ULONG Address2;
-	PVOID pBuff;
-	ULONG Size;
+	ULONGLONG ProcessId;
+	ULONGLONG Address;
+	DWORD64 pBuff;
+	ULONGLONG Size;
 
 } KERNEL_READ_REQUEST, * PKERNEL_READ_REQUEST;
+#pragma pack(pop)
 
 typedef struct _KERNEL_WRITE_REQUEST
 {
-	ULONG ProcessId;
-	ULONG Address;
-	PVOID pBuff;
-	ULONG Size;
+	ULONGLONG ProcessId;
+	ULONGLONG Address;
+	DWORD64 pBuff;
+	ULONGLONG Size;
 
 } KERNEL_WRITE_REQUEST, * PKERNEL_WRITE_REQUEST;
