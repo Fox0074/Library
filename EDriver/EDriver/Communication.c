@@ -1,15 +1,16 @@
-#pragma warning (disable : 4022)
+#pragma warning (disable : 4022 42)
 
 #include "Communication.h"
 #include "Messages.h"
 #include "Data.h"
 #include "Memory.h"
 
+
 NTSTATUS IoControl(PDEVICE_OBJECT deviceObject, PIRP irp)
 {
 	UNREFERENCED_PARAMETER(deviceObject);
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
-
+	
 	try
 	{
 		
@@ -23,13 +24,22 @@ NTSTATUS IoControl(PDEVICE_OBJECT deviceObject, PIRP irp)
 		{
 		case IO_GET_CLIENTADDRESS:
 		{
-			PULONG outPut = (PULONG)irp->AssociatedIrp.SystemBuffer;
-			*outPut = GameDllAdress;
+			PULONGLONG outPut = (PULONGLONG)irp->AssociatedIrp.SystemBuffer;
 
-			DebugMessage("Clent adress requested!\n");
+			PEPROCESS process = NULL;
+			NTSTATUS status2 = PsLookupProcessByProcessId((HANDLE) *outPut, &process);
 
-			status = STATUS_SUCCESS;
-			byteIO = sizeof(*outPut);
+			if (!(!NT_SUCCESS(status2) || process == NULL))
+			{
+				*outPut = (UINT64)PsGetProcessSectionBaseAddress(process);
+
+				//*outPut = GameDllAdress;
+
+				DebugMessage("Clent adress requested!\n");
+
+				status = STATUS_SUCCESS;
+				byteIO = sizeof(*outPut);
+			}
 		}break;
 
 		case IO_READ_REQUEST:

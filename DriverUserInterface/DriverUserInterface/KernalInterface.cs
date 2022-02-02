@@ -84,9 +84,9 @@ namespace DriverUserInterface
         private const uint FILE_SHARE_READ = 0x00000001;
         private const uint FILE_SHARE_WRITE = 0x00000002;
 
-        private const uint GET_CLIENT_ADDRESS = 0x666;
-        private const uint READ_REQUEST = 0x666;
-        private const uint WRITE_REQUEST = 0x666;
+        private const uint GET_CLIENT_ADDRESS = 0x480;
+        private const uint READ_REQUEST = 0x481;
+        private const uint WRITE_REQUEST = 0x482;
 
         public IntPtr hDriver;
 
@@ -101,14 +101,14 @@ namespace DriverUserInterface
         }
 
 
-        public long GetClientAddress()
+        public long GetClientAddress(long pid)
         {
             if (hDriver == (IntPtr)(-1))
             {
                 return 0;
             }
 
-            long address = 0;
+            long address = pid;
             int bytes = 0;
             var test = new NativeOverlapped();
 
@@ -156,6 +156,45 @@ namespace DriverUserInterface
 
             Marshal.FreeHGlobal(ptr);
             return readValue;
+        }
+
+        public float ReadVirtualMemoryFloat(long processId, long readAddress, long size)
+        {
+
+            _KERNEL_READ_REQUEST readRequest;
+            float readValue = 0;
+            IntPtr ptr = Marshal.AllocHGlobal(4);
+            Marshal.WriteInt64(ptr, 0, 0);
+
+            if (hDriver == (IntPtr)(-1))
+                return 0;
+
+            readRequest.ProcessId = processId;
+            readRequest.Address = readAddress;
+            readRequest.pBuffer = ptr.ToInt64();
+            readRequest.Size = size;
+
+            long bytes = 0;
+            var test = new NativeOverlapped();
+
+            if (DeviceIoControl(
+                hDriver,
+                IoMethodRequest(READ_REQUEST),
+                ref readRequest,
+                32,
+                ref readRequest,
+                32,
+                ref bytes,
+                ref test))
+            {
+                float[] x = new float[1];
+                Marshal.Copy(ptr, x, 0, 1);
+                Marshal.FreeHGlobal(ptr);
+                return x.First();
+            }
+
+            Marshal.FreeHGlobal(ptr);
+            return -1;
         }
 
         public bool WriteVirtualMemory(long processId, long writeAddress, long writeValue, long size)

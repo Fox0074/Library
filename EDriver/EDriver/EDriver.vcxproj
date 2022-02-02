@@ -76,6 +76,7 @@
     <ConfigurationType>Driver</ConfigurationType>
     <DriverType>KMDF</DriverType>
     <DriverTargetPlatform>Universal</DriverTargetPlatform>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <TargetVersion>Windows10</TargetVersion>
@@ -129,6 +130,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <Inf2CatUseLocalTime>true</Inf2CatUseLocalTime>
+    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
@@ -163,9 +165,11 @@
     </DriverSign>
     <Link>
       <AdditionalOptions>/INTEGRITYCHECK %(AdditionalOptions)</AdditionalOptions>
+      <EntryPointSymbol>Entry</EntryPointSymbol>
     </Link>
     <ClCompile>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
