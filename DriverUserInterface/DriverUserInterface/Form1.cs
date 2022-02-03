@@ -18,35 +18,28 @@ namespace DriverUserInterface
     {
         private static Graphics g;
 
-        private long baseAddres = -1;
-        private int PosOffs1 = 67663568;
-        private int PosOffs2 = 67673944;
-
-
-        private Vector3 playerPos;
-        private Vector3 playerDir;
         private Vector2 MaxCoords = new Vector2(15360, 15360);
-        private KernalInterface driver;
+        private const int PosOffs1 = 67663568; //Camera?? + 56 ->Player
+        private const int PosOffs2 = 67673944;
+
+        private long _baseAddres = -1;
+        private Vector3 _playerPos;
+        private Vector3 _playerDir;
+        private KernalInterface _driver;
         private Process _gameProcess;
-        private Thread _thread;
+        private Thread _drawingThread;
 
         public Form1()
         {
             InitializeComponent();
-            driver = new KernalInterface("\\\\.\\guideeh");
+            _driver = new KernalInterface("\\\\.\\guideeh");
             g = pictureBox1.CreateGraphics();
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            _gameProcess = Process.GetProcesses().FirstOrDefault(x => x.ProcessName == "DayZ_x64");
-            baseAddres = GetBaseAddres(_gameProcess);
         }
 
         private unsafe void button2_Click(object sender, EventArgs e)
         {
             _gameProcess = Process.GetProcesses().FirstOrDefault(x => x.ProcessName == "EscapeFromTarkov.exe");
-            baseAddres = GetBaseAddres(_gameProcess);
+            _baseAddres = GetBaseAddres(_gameProcess);
         }
 
         private Vector3 GetPlayerPos()
@@ -56,9 +49,9 @@ namespace DriverUserInterface
             if (_gameProcess != null)
             {
                 var id = (long)_gameProcess.Id;
-                var X = driver.ReadVirtualMemoryAny<float>(id, baseAddres + offset);
-                var Z = driver.ReadVirtualMemoryAny<float>(id, baseAddres + offset + 4);
-                var Y = driver.ReadVirtualMemoryAny<float>(id, baseAddres + offset + 8);
+                var X = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset);
+                var Z = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset + 4);
+                var Y = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset + 8);
 
                 return new Vector3(X, Y, Z);
                 
@@ -73,9 +66,9 @@ namespace DriverUserInterface
             if (_gameProcess != null)
             {
                 var id = (long)_gameProcess.Id;
-                var X = driver.ReadVirtualMemoryAny<float>(id, baseAddres + offset + 12);
-                var Z = driver.ReadVirtualMemoryAny<float>(id, baseAddres + offset + 16);
-                var Y = driver.ReadVirtualMemoryAny<float>(id, baseAddres + offset + 20);
+                var X = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset + 12);
+                var Z = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset + 16);
+                var Y = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset + 20);
 
 
                 return new Vector3(X, Y, Z);
@@ -86,7 +79,7 @@ namespace DriverUserInterface
 
         private long GetBaseAddres(Process proc)
         {
-            return driver.GetClientAddress(proc.Id);
+            return _driver.GetClientAddress(proc.Id);
         }
 
         
@@ -94,21 +87,16 @@ namespace DriverUserInterface
         {
             var bitMap = new Bitmap(Properties.Resources.Screenshot_1);
             Vector2 size = new Vector2(bitMap.Width, bitMap.Height);
-            Vector2 otnPlayerPos = new Vector2(playerPos.X / MaxCoords.X, playerPos.Y / MaxCoords.Y);
-            Vector2 ScreenPlayerPos = new Vector2(size.X * otnPlayerPos.X, size.Y - size.Y * otnPlayerPos.Y);
+            Vector2 otnPlayerPos = new Vector2(_playerPos.X / MaxCoords.X, _playerPos.Y / MaxCoords.Y);
+            Vector2 ScreenPlayerPos = new Vector2(g.VisibleClipBounds.Width * otnPlayerPos.X, g.VisibleClipBounds.Height - g.VisibleClipBounds.Height * otnPlayerPos.Y);
+            var normDirVector = Vector2.Normalize(new Vector2(_playerDir.X, _playerDir.Y));
 
-            for (int i = (int)ScreenPlayerPos.X; i < (int)ScreenPlayerPos.X + 5; i++)
-                for (int j = (int)ScreenPlayerPos.Y; j < (int)ScreenPlayerPos.Y + 5; j++)
-                    if (i < size.X && j < size.Y)
-                    bitMap.SetPixel(i, j, Color.Red);
-
-            var normDirVector = Vector2.Normalize(new Vector2(playerDir.X , playerDir.Y));
-            ScreenPlayerPos = new Vector2(g.VisibleClipBounds.Width * otnPlayerPos.X, g.VisibleClipBounds.Height - g.VisibleClipBounds.Height * otnPlayerPos.Y);
-            g.DrawLine(new Pen(Color.Red, 2), new Point((int)ScreenPlayerPos.X + 3, (int)ScreenPlayerPos.Y + 3),
+            g.DrawEllipse(new Pen(Color.Red, 1), new RectangleF(new Point((int)ScreenPlayerPos.X - 4 , (int)ScreenPlayerPos.Y - 4) , new SizeF(8,8)));
+            g.DrawLine(new Pen(Color.Red, 2), new Point((int)ScreenPlayerPos.X, (int)ScreenPlayerPos.Y),
                 new Point((int)ScreenPlayerPos.X + (int)(normDirVector.X * 20), (int)ScreenPlayerPos.Y + (int)(-normDirVector.Y * 20)));
 
 
-            listBox1.BeginInvoke(new Action(() => { listBox1.Items.Clear(); listBox1.Items.Add(playerPos.ToString()); listBox1.Items.Add(playerDir.ToString()); }));;
+            listBox1.BeginInvoke(new Action(() => { listBox1.Items.Clear(); listBox1.Items.Add(_playerPos.ToString()); listBox1.Items.Add(_playerDir.ToString()); }));;
             pictureBox1.BeginInvoke(new Action(() => g = pictureBox1.CreateGraphics()));
             pictureBox1.BeginInvoke(new Action(()=> pictureBox1.Image = bitMap));
 
@@ -116,10 +104,13 @@ namespace DriverUserInterface
 
         private void DrawThread()
         {
+            _gameProcess = Process.GetProcesses().FirstOrDefault(x => x.ProcessName == "DayZ_x64");
+            _baseAddres = GetBaseAddres(_gameProcess);
+
             while (true)
             {
-                playerPos = GetPlayerPos();
-                playerDir = GetPlayerDir();
+                _playerPos = GetPlayerPos();
+                _playerDir = GetPlayerDir();
                 DrawPlayerPoint();
                 Thread.Sleep(13);//tick 13ms
             }
@@ -127,13 +118,18 @@ namespace DriverUserInterface
 
         private void button3_Click(object sender, EventArgs e)
         {
-            _thread = new Thread(new ThreadStart(DrawThread));
-            _thread.Start();
+            _drawingThread = new Thread(new ThreadStart(DrawThread));
+            _drawingThread.Start();
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            _thread.Abort();
+            _drawingThread.Abort();
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
