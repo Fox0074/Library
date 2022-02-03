@@ -39,7 +39,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(229, 12);
+            this.button1.Location = new System.Drawing.Point(241, 330);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(143, 48);
             this.button1.TabIndex = 0;
@@ -49,11 +49,11 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(229, 92);
+            this.button2.Location = new System.Drawing.Point(241, 384);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(143, 48);
             this.button2.TabIndex = 1;
-            this.button2.Text = "TestReadMemory";
+            this.button2.Text = "Tarkov";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
@@ -69,20 +69,20 @@
             // 
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
             this.pictureBox1.InitialImage = ((System.Drawing.Image)(resources.GetObject("pictureBox1.InitialImage")));
-            this.pictureBox1.Location = new System.Drawing.Point(389, 12);
+            this.pictureBox1.Location = new System.Drawing.Point(390, 12);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(497, 426);
+            this.pictureBox1.Size = new System.Drawing.Size(814, 690);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 3;
             this.pictureBox1.TabStop = false;
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(229, 175);
+            this.button3.Location = new System.Drawing.Point(229, 12);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(143, 48);
+            this.button3.Size = new System.Drawing.Size(155, 48);
             this.button3.TabIndex = 4;
-            this.button3.Text = "TestReadMemory";
+            this.button3.Text = "Start";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
@@ -90,7 +90,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1091, 450);
+            this.ClientSize = new System.Drawing.Size(1219, 723);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.listBox1);
@@ -98,6 +98,7 @@
             this.Controls.Add(this.button1);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 

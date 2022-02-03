@@ -197,6 +197,71 @@ namespace DriverUserInterface
             return -1;
         }
 
+        public T Read<T>(IntPtr address)
+        {
+            try
+            {
+                var size = Marshal.SizeOf(typeof(T));
+                var buffer = new byte[size];
+
+                Marshal.Copy(address, buffer, 0, size);
+                var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+                var data = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+                handle.Free();
+
+                return data;
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine("Exception thrown: {0}", e);
+
+                return default(T);
+            }
+        }
+
+        public unsafe T ReadVirtualMemoryAny<T>(long processId, long readAddress)
+        {
+
+            _KERNEL_READ_REQUEST readRequest;
+            var size = Marshal.SizeOf(typeof(T));
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+            var buffer = new byte[size];
+            Marshal.Copy(ptr, buffer, 0, size);
+
+            if (hDriver == (IntPtr)(-1))
+                return default(T);
+
+            readRequest.ProcessId = processId;
+            readRequest.Address = readAddress;
+            readRequest.pBuffer = ptr.ToInt64();
+            readRequest.Size = size;
+
+            long bytes = 0;
+            var test = new NativeOverlapped();
+
+            if (DeviceIoControl(
+                hDriver,
+                IoMethodRequest(READ_REQUEST),
+                ref readRequest,
+                32,
+                ref readRequest,
+                32,
+                ref bytes,
+                ref test))
+            {
+     
+                Marshal.Copy(ptr, buffer,0, size);
+                var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+                var data = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+                handle.Free();
+                Marshal.FreeHGlobal(ptr);
+                return data;
+            }
+
+            Marshal.FreeHGlobal(ptr);
+            return default(T);
+        }
+
         public bool WriteVirtualMemory(long processId, long writeAddress, long writeValue, long size)
         {
             _KERNEL_WRITE_REQUEST writeRequest;
