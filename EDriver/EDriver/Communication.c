@@ -96,18 +96,27 @@ NTSTATUS IoControl(PDEVICE_OBJECT deviceObject, PIRP irp)
 NTSTATUS CloseCall(PDEVICE_OBJECT deviceObject, PIRP irp)
 {
 	UNREFERENCED_PARAMETER(deviceObject);
-	irp->IoStatus.Status = STATUS_SUCCESS;
-	irp->IoStatus.Information = 0;
+	try
+	{
+		irp->IoStatus.Status = STATUS_SUCCESS;
+		irp->IoStatus.Information = 0;
 
-	IoCompleteRequest(irp, IO_NO_INCREMENT);
-	DebugMessage("Connection Terminated!\n");
+		IoCompleteRequest(irp, IO_NO_INCREMENT);
+		DebugMessage("Connection Terminated!\n");
 
 
-	return STATUS_SUCCESS;
+		return STATUS_SUCCESS;
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		return STATUS_UNSUCCESSFUL;
+	}
 }
 
 NTSTATUS CreateCall(PDEVICE_OBJECT deviceObject, PIRP irp)
 {
+	try
+	{
 	UNREFERENCED_PARAMETER(deviceObject);
 	irp->IoStatus.Status = STATUS_SUCCESS;
 	irp->IoStatus.Information = 0;
@@ -116,4 +125,9 @@ NTSTATUS CreateCall(PDEVICE_OBJECT deviceObject, PIRP irp)
 	DebugMessage("CreateCall was called!\n");
 
 	return STATUS_SUCCESS;
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		return STATUS_UNSUCCESSFUL;
+	}
 }

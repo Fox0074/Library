@@ -89,6 +89,7 @@ namespace DriverUserInterface
         private const uint WRITE_REQUEST = 0x482;
 
         public IntPtr hDriver;
+        public long _processId;
 
         public KernalInterface(string registryPath)
         {
@@ -129,7 +130,7 @@ namespace DriverUserInterface
             var buffer = new byte[size];
             Marshal.Copy(ptr, buffer, 0, size);
 
-            if (hDriver == (IntPtr)(-1))
+            if (hDriver == (IntPtr)(-1) || readAddress <= 0)
                 return default(T);
 
             readRequest.ProcessId = processId;
@@ -163,7 +164,68 @@ namespace DriverUserInterface
             return default(T);
         }
 
-        public bool WriteVirtualMemory(long processId, long writeAddress, long writeValue, long size)
+        public T ReadVirtualMemory<T>(long readAddress)
+        {
+            if (_processId != -1)
+            {
+                return ReadVirtualMemory<T>(_processId,readAddress);
+            }
+            return default(T);
+        }
+
+        public string ReadVirtualMemoryString(long processId, long readAddress, int size)
+        {
+
+            _KERNEL_READ_REQUEST readRequest;
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+            var buffer = new byte[size];
+            Marshal.Copy(ptr, buffer, 0, size);
+
+            if (hDriver == (IntPtr)(-1))
+            {
+                Marshal.FreeHGlobal(ptr);
+                return "NULL";
+            }
+
+            readRequest.ProcessId = processId;
+            readRequest.Address = readAddress;
+            readRequest.pBuffer = ptr.ToInt64();
+            readRequest.Size = size;
+
+            long bytes = 0;
+            var test = new NativeOverlapped();
+
+            if (DeviceIoControl(
+                hDriver,
+                IoMethodRequest(READ_REQUEST),
+                ref readRequest,
+                32,
+                ref readRequest,
+                32,
+                ref bytes,
+                ref test))
+            {
+
+                Marshal.Copy(ptr, buffer, 0, size);
+                var data = Encoding.UTF8.GetString(buffer);
+                Marshal.FreeHGlobal(ptr);
+                return data;
+            }
+
+            Marshal.FreeHGlobal(ptr);
+            return "NULL";
+        }
+
+        public string ReadVirtualMemoryString(long readAddress, int size)
+        {
+            if (_processId != -1)
+            {
+                return ReadVirtualMemoryString(_processId, readAddress, size);
+            }
+            return "NULL";
+        }
+
+            public bool WriteVirtualMemory(long processId, long writeAddress, long writeValue, long size)
         {
             _KERNEL_WRITE_REQUEST writeRequest;
             IntPtr ptr = Marshal.AllocHGlobal(8);
