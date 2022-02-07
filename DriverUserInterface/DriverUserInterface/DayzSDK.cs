@@ -233,14 +233,28 @@ internal class DayzSDK
 
 			Vector3 temp = Position - GetInvertedViewTranslation();
 
-			float x = temp.Dot(GetInvertedViewRight());
-			float y = temp.Dot(GetInvertedViewUp());
-			float z = temp.Dot(GetInvertedViewForward());
+			var r = GetInvertedViewRight();
+			var u = GetInvertedViewUp();
+			var f = GetInvertedViewForward();
+
+			float x = temp.Dot(r);
+			float y = temp.Dot(u);
+			float z = temp.Dot(f);
 
 			if (z < 0.1f)
 				return false;
 
-			var res = new Vector3 ( GetViewportSize().x* (1 + (x / GetProjectionD1().x / z)), GetViewportSize().y * (1 - (y / GetProjectionD2().y / z)), z);
+			var t1 = GetProjectionD1();
+			var t2 = GetProjectionD2();
+			var t3 = GetViewportSize();
+
+			var vsx = GetViewportSize().x;
+			var vsy = GetViewportSize().z;
+			var D1 = GetProjectionD1().x;
+			var D2 = GetProjectionD2().z;
+			var res = new Vector3 ( vsx * (1 + (x / D1 / z)),
+									vsy * (1 - (y / D2 / z)),
+									z);
 
 			output.x = res.x;
 			output.y = res.y;

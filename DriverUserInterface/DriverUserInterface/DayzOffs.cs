@@ -21,6 +21,6 @@ namespace DriverUserInterface
         public static int ItemTables = 0x1FB8;
         public static int LocalPlayer = 0x28B8;
 
-        // item_pos = ItemTables i*10] + 0x198] +2C
+        //OFFSET_WORLD_DROPPEDITEMTABLE 0xF84
     }
 }

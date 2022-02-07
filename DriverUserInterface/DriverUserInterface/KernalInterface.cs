@@ -123,14 +123,13 @@ namespace DriverUserInterface
 
         public T ReadVirtualMemory<T>(long processId, long readAddress)
         {
-
             _KERNEL_READ_REQUEST readRequest;
             var size = Marshal.SizeOf(typeof(T));
             IntPtr ptr = Marshal.AllocHGlobal(size);
             var buffer = new byte[size];
             Marshal.Copy(ptr, buffer, 0, size);
 
-            if (hDriver == (IntPtr)(-1) || readAddress <= 0)
+            if (hDriver == (IntPtr)(-1) || readAddress > 0x7fffffffffff || readAddress <= 0)
                 return default(T);
 
             readRequest.ProcessId = processId;
@@ -181,7 +180,7 @@ namespace DriverUserInterface
             var buffer = new byte[size];
             Marshal.Copy(ptr, buffer, 0, size);
 
-            if (hDriver == (IntPtr)(-1))
+            if (hDriver == (IntPtr)(-1) || readAddress > 0x7fffffffffff || readAddress <= 0)
             {
                 Marshal.FreeHGlobal(ptr);
                 return "NULL";

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -20,9 +21,7 @@ namespace DriverUserInterface
         public static long World;
 
         private static Graphics g;
-        private static PictureBox p;
 
-        private System.Numerics.Vector2 MaxCoords = new System.Numerics.Vector2(15360, 15360);
         private const int PosOffs1 = 67663568;
         private const int PosOffs2 = 67673944;
 
@@ -35,17 +34,25 @@ namespace DriverUserInterface
 
         List<_player_t> entities = new List<_player_t>();
         List<Vector3> ItemsPos = new List<Vector3>();
-        Bitmap bitMap;
-        private float _mapScale = 1;
+        List<string> ItemsNames = new List<string>();
+
+        private bool _showPlayers = true;
+        private bool _showZombie = true;
+        private bool _showLoot = true;
+        private bool _showOther = true;
+        private bool _showSettings = false;
+        private bool _showNames = true;
+
+        private int _drawDistance = 1200;
         public Form1()
         {
+            TransparencyKey = BackColor;
+            TopMost = true;
             InitializeComponent();
             _driver = new KernalInterface("\\\\.\\guideeh");
             this.SetStyle(ControlStyles.AllPaintingInWmPaint
             | ControlStyles.UserPaint | ControlStyles.DoubleBuffer, true);
-            g = pictureBox1.CreateGraphics();
-            bitMap = new Bitmap(Properties.Resources.Screenshot_1);
-            p = pictureBox1;
+            g = this.CreateGraphics();
         }
 
         private unsafe void button2_Click(object sender, EventArgs e)
@@ -95,18 +102,6 @@ namespace DriverUserInterface
         }
 
         
-        private void DrawPlayerPoint()
-        {
-            g = pictureBox1.CreateGraphics();
-            System.Numerics.Vector2 otnPlayerPos = new System.Numerics.Vector2(_playerPos.X / MaxCoords.X, _playerPos.Y / MaxCoords.Y);
-            System.Numerics.Vector2 ScreenPlayerPos = new System.Numerics.Vector2(g.VisibleClipBounds.Width * otnPlayerPos.X, g.VisibleClipBounds.Height - g.VisibleClipBounds.Height * otnPlayerPos.Y);
-            var normDirVector = System.Numerics.Vector2.Normalize(new System.Numerics.Vector2(_playerDir.X, _playerDir.Y));
-
-
-            g.DrawEllipse(new Pen(Color.Red, 1), new RectangleF(new Point((int)ScreenPlayerPos.X - 4 , (int)ScreenPlayerPos.Y - 4) , new SizeF(8,8)));
-            g.DrawLine(new Pen(Color.Red, 2), new Point((int)ScreenPlayerPos.X, (int)ScreenPlayerPos.Y),
-                new Point((int)ScreenPlayerPos.X + (int)(normDirVector.X * 20), (int)ScreenPlayerPos.Y + (int)(-normDirVector.Y * 20)));
-        }
 
         private void DrawThread()
         {
@@ -114,36 +109,19 @@ namespace DriverUserInterface
             _driver._processId = _gameProcess.Id;
             _baseAddres = GetBaseAddres(_gameProcess);
             World = _driver.ReadVirtualMemory<long>(_baseAddres + DayzOffs.World);
+            g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
 
             while (true)
             {
-                //pictureBox1.Invalidate();
-                //pictureBox1.BeginInvoke(new Action(() => pictureBox1.Image = bitMap));
-                if (_mapScale > 1)
-                {
-                    Vector2 newSize = new Vector2((int)(bitMap.Width / _mapScale), (int)(bitMap.Height / _mapScale));
-                    System.Numerics.Vector2 otnPlayerPos = new System.Numerics.Vector2(_playerPos.X / MaxCoords.X, _playerPos.Y / MaxCoords.Y);
-
-                    var left = (bitMap.Width - newSize.x) * otnPlayerPos.X;
-                    var top = (bitMap.Height - newSize.y) * (1 - otnPlayerPos.Y);
-
-                    var newBitMap = bitMap.Clone(new Rectangle((int)left, (int)top, (int)newSize.x, (int)newSize.y), bitMap.PixelFormat);
-                    p.Image = newBitMap;
-                }
-                else
-                    p.Image = bitMap;
-                _playerPos = GetPlayerPos();
-                _playerDir = GetPlayerDir();
                 ReadData();
-                Test();
-                DrawPlayerPoint();
-                Thread.Sleep(60);//tick 13ms
-
+                ShowEntity();
+                Thread.Sleep(26);//tick 13ms
             }
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
+            //this.Enabled = false;
             _drawingThread = new Thread(new ThreadStart(DrawThread));
             _drawingThread.Start();
         }
@@ -164,6 +142,7 @@ namespace DriverUserInterface
         {
             List<_player_t> tmp = new List<_player_t>();
             ItemsPos.Clear();
+            ItemsNames.Clear();
 
             int NearTableSize = _driver.ReadVirtualMemory<int>(World + DayzOffs.NearEntityTable + 0x8);
             int FarTableSize = _driver.ReadVirtualMemory<int>(World + DayzOffs.FarEntityTable + 0x8);
@@ -216,7 +195,7 @@ namespace DriverUserInterface
                 if (EntityTable == 0) continue;
 
                 long Entity = _driver.ReadVirtualMemory<long>(EntityTable + (i * 0x10));
-                long Entity2 = _driver.ReadVirtualMemory<long>(EntityTable + (i * 0x10));
+                //long Entity2 = _driver.ReadVirtualMemory<long>(EntityTable + (i * 0x10));
                 if (Entity < 10) continue;
 
                 // checking if player even networked
@@ -225,16 +204,35 @@ namespace DriverUserInterface
                 var pos = _driver.ReadVirtualMemory<Vector3>(visualStatePointer + 0x2C);
                 var posSystem = new System.Numerics.Vector3(pos.x, pos.y, pos.z);
                 if (Math.Abs(posSystem.Length()) > 10 && Math.Abs(posSystem.Length() - _playerPos.Length()) > 2)
+                {
                     ItemsPos.Add(pos);
+                    var firstPointer = _driver.ReadVirtualMemory<long>(Entity + 0x8);
+                    var secondPointer = _driver.ReadVirtualMemory<long>(firstPointer + 0x10);
+                    var name = _driver.ReadVirtualMemoryString(secondPointer, 20).ToString(); 
+                    ItemsNames.Add(name);
+                }
             }
 
             entities = tmp;
         }
 
-        private void Test()
+        List<Rectangle> drawingZ = new List<Rectangle>();
+        List<Rectangle> drawingP = new List<Rectangle>();
+        List<float> drawingZDist = new List<float>();
+        List<float> drawingPDist = new List<float>();
+        List<float> drawingODist = new List<float>();
+        List<Rectangle> drawingO = new List<Rectangle>();
+        int i = 0;
+        private void ShowEntity()
         {
-           listBox1.BeginInvoke(new Action(() => listBox1.Items.Clear()));
-            
+           this.BeginInvoke(new Action(() => this.Invalidate()));
+
+            drawingZ.Clear();
+            drawingP.Clear();
+            drawingO.Clear();
+            drawingPDist.Clear();
+            drawingZDist.Clear();
+            drawingODist.Clear();
 
             for (int i = 0; i < entities.Count; i++)
             {
@@ -246,51 +244,153 @@ namespace DriverUserInterface
                     continue;
                 DayzSDK.WorldToScreen(worldPosition, ref screenPosition);
 
-                //if (screenPosition.z < 1.0f) continue;
+                if (screenPosition.z < 1.0f ) 
+                    continue;
 
                 var distance = DayzSDK.GetDistanceToMe(worldPosition);
+
+                if (distance < 1.0f)
+                    continue;
+
                 string entity = DayzSDK.GetEntityTypeName(Entities.EntityPtr);
                 entity = entity.Replace('\0', ' ');
-                var scalModifler = new System.Numerics.Vector2(worldPosition.x - _playerPos.X, worldPosition.y - _playerPos.Y);
-                worldPosition.x += (scalModifler * _mapScale - scalModifler).X;
-                worldPosition.y += (scalModifler * _mapScale - scalModifler).Y;
-                System.Numerics.Vector2 otnPlayerPos = new System.Numerics.Vector2(worldPosition.x / MaxCoords.X, worldPosition.y / MaxCoords.Y) ;
-                System.Numerics.Vector2 ScreenPlayerPos = new System.Numerics.Vector2(g.VisibleClipBounds.Width * otnPlayerPos.X, g.VisibleClipBounds.Height - g.VisibleClipBounds.Height * otnPlayerPos.Y);
-                g.DrawEllipse(new Pen(entity == "dayzplayer " ? Color.Red : Color.Blue, entity == "dayzplayer " ? 5 : 1), new RectangleF(new Point((int)ScreenPlayerPos.X - 1, (int)ScreenPlayerPos.Y - 1), new SizeF(2, 2)));
-
-
-                listBox1.BeginInvoke(new Action(() => 
+                //g.DrawRectangle(new Pen(entity == "dayzplayer " ? Color.Red : entity == "dayzinfected " ? Color.Blue : Color.Violet, entity == "dayzplayer " ? 5 : 3), new Rectangle(new Point((int)screenPosition.x, (int)screenPosition.y), new Size(50, 50)));
+                
+                switch(entity)
                 {
-                    //listBox1.Items.Add(entity + ": " + worldPosition.x.ToString() + " " + worldPosition.y.ToString() + " " + worldPosition.z.ToString());
-                    //listBox1.Items.Add(worldPosition.x.ToString() + " " + worldPosition.y.ToString() + " " + worldPosition.z.ToString());
-                })); ;
+                    case "dayzplayer ":
+                        drawingP.Add(new Rectangle(new Point((int)screenPosition.x - 25, (int)screenPosition.y - 50), new Size(Math.Max(1,(int)(25 * ((1000 - distance) / 1000))), Math.Max(1, (int)(50 * ((1000 - distance) / 1000))))));
+                        drawingPDist.Add(distance);
+                        break;
+                    case "dayzinfected ":
+                        if (distance > _drawDistance)
+                            continue;
+                        drawingZ.Add(new Rectangle(new Point((int)screenPosition.x - 25, (int)screenPosition.y - 50), new Size(Math.Max(1, (int)(25 * ((1000 - distance) / 1000))), Math.Max(1, (int)(50 * ((1000 - distance) / 1000))))));
+                        drawingZDist.Add(distance);
+                        break;
+                    default:
+                        if (distance > _drawDistance)
+                            continue;
+                        drawingO.Add(new Rectangle(new Point((int)screenPosition.x - 25, (int)screenPosition.y - 50), new Size(Math.Max(1, (int)(25* ((1000 - distance) / 1000))), Math.Max(1, (int)(50 * ((1000 - distance) / 1000))))));
+                        drawingODist.Add(distance);
+                        break;
+                }
+                
+
+                //entity = entity.Replace('\0', ' ');
+                //var scalModifler = new System.Numerics.Vector2(worldPosition.x - _playerPos.X, worldPosition.y - _playerPos.Y);
+                //worldPosition.x += (scalModifler * _mapScale - scalModifler).X;
+                //worldPosition.y += (scalModifler * _mapScale - scalModifler).Y;
+                //System.Numerics.Vector2 otnPlayerPos = new System.Numerics.Vector2(worldPosition.x / MaxCoords.X, worldPosition.y / MaxCoords.Y) ;
+                //System.Numerics.Vector2 ScreenPlayerPos = new System.Numerics.Vector2(g.VisibleClipBounds.Width * otnPlayerPos.X, g.VisibleClipBounds.Height - g.VisibleClipBounds.Height * otnPlayerPos.Y);
+                //GDraw(new Pen(entity == "dayzplayer " ? Color.Red : entity == "dayzinfected " ? Color.Blue : Color.Violet, entity == "dayzplayer " ? 5 : 1), new Rectangle(new Point((int)ScreenPlayerPos.X - 1, (int)ScreenPlayerPos.Y - 1), new Size(2, 2)));
             }
 
-            for (int i = 0; i < ItemsPos.Count; i++)
+            SolidBrush drawBrush = new SolidBrush(Color.White);
+            if (drawingP.Count > 0 && _showPlayers)
             {
-                try
+                this.BeginInvoke(new Action(() => g.DrawRectangles(new Pen(Color.Red, 1), drawingP.ToArray())));
+                for (int i = 0 ; i < drawingPDist.Count; i++)
                 {
-                    Vector3 worldPosition = ItemsPos[i];
-                    var scalModifler = new System.Numerics.Vector2(worldPosition.x - _playerPos.X, worldPosition.y - _playerPos.Y);
-                    worldPosition.x += (scalModifler * _mapScale - scalModifler).X;
-                    worldPosition.y += (scalModifler * _mapScale - scalModifler).Y;
-                    System.Numerics.Vector2 otnPlayerPos = new System.Numerics.Vector2(worldPosition.x / MaxCoords.X, worldPosition.y / MaxCoords.Y);
-                    System.Numerics.Vector2 ScreenPlayerPos = new System.Numerics.Vector2(g.VisibleClipBounds.Width * otnPlayerPos.X, g.VisibleClipBounds.Height - g.VisibleClipBounds.Height * otnPlayerPos.Y);
-                    g.DrawEllipse(new Pen(Color.Yellow, 1), new RectangleF(new Point((int)ScreenPlayerPos.X - 1, (int)ScreenPlayerPos.Y - 1), new SizeF(2, 2)));
-                    listBox1.BeginInvoke(new Action(() =>
+                    var k = i;
+                    this.BeginInvoke(new Action(() => g.DrawString(((int)drawingPDist[k]).ToString(), new Font("Arial", 10), drawBrush, drawingP[k].X, drawingP[k].Y - 20)));
+                }
+            }
+            if (drawingZ.Count > 0 && _showZombie)
+            {
+                this.BeginInvoke(new Action(() => g.DrawRectangles(new Pen(Color.Blue, 1), drawingZ.ToArray())));
+                for (int i = 0; i < drawingZ.Count; i++)
+                {
+                    var k = i;
+                    this.BeginInvoke(new Action(() => g.DrawString(((int)drawingZDist[k]).ToString(), new Font("Arial", 10), drawBrush, drawingZ[k].X, drawingZ[k].Y - 20)));
+                }
+            }
+            if (drawingO.Count > 0 && _showOther)
+            {
+                this.BeginInvoke(new Action(() => g.DrawRectangles(new Pen(Color.Violet, 1), drawingO.ToArray())));
+                for (int i = 0; i < drawingO.Count; i++)
+                {
+                    var k = i;
+                    this.BeginInvoke(new Action(() => g.DrawString(((int)drawingODist[k]).ToString(), new Font("Arial", 10), drawBrush, drawingO[k].X, drawingO[k].Y - 20)));
+                }
+            }
+
+            if (_showLoot)
+            {
+                List<Rectangle> isemsPos = new List<Rectangle>();
+                for (int i = 0; i < ItemsPos.Count; i++)
+                {
+                    try
                     {
-                        listBox1.Items.Add(worldPosition.x.ToString() + " " + worldPosition.y.ToString() + " " + worldPosition.z.ToString());
-                    }));
+                        Vector3 worldPosition = ItemsPos[i];
+                        var name = ItemsNames[i].Replace("\0","");
+                        Vector3 screenPosition = new Vector3(0, 0, 0);
+                        DayzSDK.WorldToScreen(worldPosition, ref screenPosition);
+
+                        if (screenPosition.z < 1.0f)
+                            continue;
+
+                        var distance = DayzSDK.GetDistanceToMe(worldPosition);
+                        if (distance <= _drawDistance)
+                        {
+                            if (_showNames)
+                                this.BeginInvoke(new Action(() => g.DrawString((name + " " + (int)distance).ToString(), new Font("Arial", 10), drawBrush, screenPosition.x, screenPosition.y - 20)));
+                            isemsPos.Add(new Rectangle(new Point((int)screenPosition.x - 25, (int)screenPosition.y - 50), new Size(Math.Min(25, Math.Max(1, (int)(25 * ((1000 - distance) / 1000)))), Math.Min(25, Math.Max(1, (int)(50 * ((1000 - distance) / 1000)))))));
+                        }
+                    }
+                    catch
+                    {
+                    }
                 }
-                catch
-                { 
-                }
+
+                if (isemsPos.Count > 0)
+                    this.BeginInvoke(new Action(() => g.DrawRectangles(new Pen(Color.Yellow, 1), isemsPos.ToArray())));
             }
         }
-
         private void trackBar1_ValueChanged(object sender, EventArgs e)
         {
-            _mapScale = 1 + (trackBar1.Value / 10f);
+            //_mapScale = 1 + (trackBar1.Value / 10f);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            _showPlayers = !_showPlayers;
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            _showZombie = !_showZombie;
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            _showLoot = !_showLoot;
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            _showSettings = !_showSettings;
+            button1.Visible = _showSettings;
+            button4.Visible = _showSettings;
+            button5.Visible = _showSettings;
+            button7.Visible = _showSettings;
+            button8.Visible = _showSettings;
+            trackBar2.Visible = _showSettings;
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            _showOther = !_showOther;
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            _showNames = !_showNames;
+        }
+
+        private void trackBar2_ValueChanged(object sender, EventArgs e)
+        {
+            _drawDistance = trackBar2.Value;
         }
     }
 }

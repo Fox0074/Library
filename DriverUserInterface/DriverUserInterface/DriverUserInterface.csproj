@@ -111,5 +111,11 @@
   <ItemGroup>
     <None Include="Screenshot_1.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="DayZ_Map.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DayZMap.bmp" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
