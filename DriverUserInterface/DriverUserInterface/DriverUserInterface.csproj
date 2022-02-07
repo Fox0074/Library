@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="DayzOffs.cs" />
     <Compile Include="DayzSDK.cs" />
+    <Compile Include="DyzAllItems.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
