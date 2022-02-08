@@ -8,9 +8,29 @@ namespace DriverUserInterface
 {
     public class DyzAllItems
     {
-
         public static bool AnyContain(string value)
         {
+            if (Weapons.Any(x => x.Contains(value)))
+                return true;
+            if (Ammo.Any(x => x.Contains(value)))
+                return true;
+            if (Loot.Any(x => x.Contains(value)))
+                return true;
+            if (Food.Any(x => x.Contains(value)))
+                return true;
+            if (Medical.Any(x => x.Contains(value)))
+                return true;
+            if (CarDetails.Any(x => x.Contains(value)))
+                return true;
+            if (WeaponDetails.Any(x => x.Contains(value)))
+                return true;
+            if (Сlothes.Any(x => x.Contains(value)))
+                return true;
+            if (Trash.Any(x => x.Contains(value)))
+                return true;
+            if (Tools.Any(x => x.Contains(value)))
+                return true;
+
             return false;
         }
 

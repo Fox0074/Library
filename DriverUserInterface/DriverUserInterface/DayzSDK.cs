@@ -1,14 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using SharpDX;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
-
+using SharpDX.Mathematics.Interop;
 
 namespace DriverUserInterface
 {
+	public enum EntityType
+    {
+		None,
+		Player,
+		Zombie,
+		Car,
+		Animal,
+		Loot
+    }
+
+
+	public class DrawingEntity
+    {
+		public float Distance;
+		public Vector3 Position;
+		public RawRectangleF DrawRect;
+		public RawRectangleF TextRect;
+		public string Name;
+		public EntityType EntityType;
+    }
+
 	public struct _player_t
 	{
 		public long EntityPtr;

@@ -22,5 +22,7 @@ namespace DriverUserInterface
         public static int LocalPlayer = 0x28B8;
 
         //OFFSET_WORLD_DROPPEDITEMTABLE 0xF84
+        //private const int PosOffs1 = 67663568;
+        //private const int PosOffs2 = 67673944;
     }
 }
