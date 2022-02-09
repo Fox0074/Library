@@ -36,6 +36,11 @@ namespace DriverUserInterface
 
         public static List<string> Weapons = new List<string>()
         {
+            "Ruger1022_Base",
+            "CZ75_Base",
+            "MKII_Base",
+            "Izh18_Base",
+            "MakarovIJ70_Base",
             "PVCBow",
             "QuickieBow",
             "RecurveBow",
@@ -236,6 +241,7 @@ namespace DriverUserInterface
         };
         public static List<string> Loot = new List<string>()
         {
+            "WoodenCrate",
             "ExplosionTest",
             "Light",
             "TestObject",
@@ -466,6 +472,10 @@ namespace DriverUserInterface
         };
         public static List<string> Food = new List<string>()
         {
+            "DogFoodCan",
+            "CatFoodCan",
+            "BrisketSpread",
+            "Snack_ColorBase",
             "ParticleTest",
             "Plant_Tomato",
             "Plant_Pepper",
@@ -546,6 +556,7 @@ namespace DriverUserInterface
         };
         public static List<string> Medical = new List<string>()
         {
+            "IodineTincture",
             "BandageDressing",
             "DisinfectantSpray",
             "DisinfectantAlcohol",
@@ -573,6 +584,14 @@ namespace DriverUserInterface
         };
         public static List<string> CarDetails = new List<string>()
         {
+            "CarDoor",
+            "CivSedanDoors_BackRi",
+            "HatchbackHood_BlueRu",
+            "Sedan_02_Wheel",
+            "Sedan_02_Door_2_1_Ye",
+            "Sedan_02_Trunk_Yello",
+            "CivSedanHood",
+            "Sedan_02_Door_1_1_Gr",
             "CigarettePack_Chernamorka",
             "CigarettePack_Merkur",
             "CigarettePack_Partyzanka",
@@ -755,6 +774,9 @@ namespace DriverUserInterface
         };
         public static List<string> Сlothes = new List<string>()
         {
+            "Clothing",
+            "NBCPantsBase",
+            "CivilianBelt",
             "TrumpetParts",
             "SportGlasses_Black",
             "SportGlasses_Blue",
@@ -1310,6 +1332,13 @@ namespace DriverUserInterface
         };
         public static List<string> Trash = new List<string>()
         {
+            "BarbedWireHGX",
+            "FencepGX7",
+            "CombinationLock4",
+            "ShelterStick",
+            "PartyTent_Lunapark",
+            "BarbedWireHG",
+            "OvenIndoor",
             "Stone",
             "SmallStone",
             "Firewood",
@@ -1355,7 +1384,8 @@ namespace DriverUserInterface
             "MetalPlate",
             "WoodenLog",
             "Rangefinder",
-            "Binoculars"
+            "Binoculars",
+            "FencepG"
         };
         public static List<string> Tools = new List<string>()
         {

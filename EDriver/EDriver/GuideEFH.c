@@ -29,8 +29,6 @@ NTSTATUS  Entry( PDRIVER_OBJECT pDriverObject, PUNICODE_STRING pRegistryPath)
 extern void DEntry(PVOID obj) 
 {
 	UNREFERENCED_PARAMETER(obj);
-	RtlInitUnicodeString(&dev, L"\\Device\\guideeh");
-	RtlInitUnicodeString(&dos, L"\\DosDevices\\guideeh");
 	if (!NT_SUCCESS(IoCreateDriver(NULL, (PDRIVER_INITIALIZE)DriverEntry))) 
 	{
 		DebugMessage("Error al crear el driver...\n");
@@ -44,8 +42,6 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject, PUNICODE_STRING pRegistryPath
 		UNREFERENCED_PARAMETER(pRegistryPath);
 		pDriverObject->DriverUnload = UnloadDriver;
 		DebugMessage("Welcome to the guide!");
-
-		PsSetLoadImageNotifyRoutine(ImageLoadCallBack);
 
 		RtlInitUnicodeString(&dev, L"\\Device\\guideeh");
 		RtlInitUnicodeString(&dos, L"\\DosDevices\\guideeh");
@@ -72,8 +68,6 @@ NTSTATUS UnloadDriver(PDRIVER_OBJECT pDriverObject)
 {
 	UNREFERENCED_PARAMETER(pDriverObject);
 	DebugMessage("TestDriver Unloaded!");
-
-	PsRemoveLoadImageNotifyRoutine(ImageLoadCallBack);
 
 	IoDeleteSymbolicLink(&dos);
 	IoDeleteDevice(pDriverObject->DeviceObject);

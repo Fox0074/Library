@@ -49,12 +49,17 @@ NTSTATUS IoControl(PDEVICE_OBJECT deviceObject, PIRP irp)
 
 			if (NT_SUCCESS(PsLookupProcessByProcessId(readInput->ProcessId, &process)))
 			{
-				KernelReadVirtualMemory(process, readInput->Address, readInput->pBuff, readInput->Size);
-				DebugMessage("Read Virtual Memory!\n");
-				status = STATUS_SUCCESS;
-				byteIO = sizeof(KERNEL_READ_REQUEST);
-			}
+				try
+				{
+					KernelReadVirtualMemory(process, readInput->Address, readInput->pBuff, readInput->Size);
+					status = STATUS_SUCCESS;
+					byteIO = sizeof(KERNEL_READ_REQUEST);
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
 
+				}
+			}
 
 		}break;
 
@@ -102,8 +107,6 @@ NTSTATUS CloseCall(PDEVICE_OBJECT deviceObject, PIRP irp)
 		irp->IoStatus.Information = 0;
 
 		IoCompleteRequest(irp, IO_NO_INCREMENT);
-		DebugMessage("Connection Terminated!\n");
-
 
 		return STATUS_SUCCESS;
 	}
@@ -122,7 +125,6 @@ NTSTATUS CreateCall(PDEVICE_OBJECT deviceObject, PIRP irp)
 	irp->IoStatus.Information = 0;
 
 	IoCompleteRequest(irp, IO_NO_INCREMENT);
-	DebugMessage("CreateCall was called!\n");
 
 	return STATUS_SUCCESS;
 	}

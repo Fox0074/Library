@@ -17,6 +17,7 @@ using Format = SharpDX.DXGI.Format;
 using SharpDX;
 using SharpDX.DirectWrite;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace DriverUserInterface
 {
@@ -70,7 +71,7 @@ namespace DriverUserInterface
         public static long World;
 
         private long _baseAddres = -1;
-       
+
         private Process _gameProcess;
         private Thread _drawingThread;
 
@@ -83,8 +84,14 @@ namespace DriverUserInterface
         private bool _showSettings = false;
         private bool _showNames = true;
         private bool _showItemsFilers = false;
+        private bool _showMap = false;
 
         private int _drawDistance = 1200;
+
+        System.Drawing.Bitmap _map;
+        private Vector2 _maxCoords = new Vector2(15360, 15360);
+        private Thread _mapDrawingThread;
+        private const int PosOffs1 = 67663568;
 
         public Form1()
         {
@@ -92,6 +99,7 @@ namespace DriverUserInterface
             SetWindowLong(this.Handle, -20, initialStyle | 0x80000 | 0x20);
             SetWindowPos(this.Handle, HWND_TOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
             OnResize(null);
+            _map = Properties.Resources.Screenshot_1;
 
             InitializeComponent();
             _driver = new KernalInterface("\\\\.\\guideeh");
@@ -105,6 +113,7 @@ namespace DriverUserInterface
             System.Drawing.Rectangle screen = Screen.FromControl(this).Bounds;
             this.Width = screen.Width;
             this.Height = screen.Height;
+            this.TransparencyKey = System.Drawing.Color.Black;
 
             this.DoubleBuffered = true; // reduce the flicker
             this.SetStyle(ControlStyles.OptimizedDoubleBuffer |// reduce the flicker too
@@ -202,8 +211,6 @@ namespace DriverUserInterface
                 device.Clear(Color.Transparent);
                 device.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Aliased;
 
-                device.DrawText("Overlay text using direct draw with DirectX", font, new SharpDX.Mathematics.Interop.RawRectangleF(5, 100, 500, 30), solidColorBrush);
-
                 foreach (var entity in Entities)
                 {
                     if (entity.Distance <= 1)
@@ -216,7 +223,6 @@ namespace DriverUserInterface
                         device.DrawText(entity.Name + " " + ((int)entity.Distance).ToString(), font, entity.TextRect, solidColorBrush);
                     }
                 }
-
 
                 device.EndDraw();
             }
@@ -241,9 +247,48 @@ namespace DriverUserInterface
 
             if (entity.EntityType == EntityType.Loot)
             {
-                if (checkedListBox1.CheckedItems.Contains("ToggleAll"))
-                    return true;
+                if (DyzAllItems.AnyContain(entity.Name))
+                    return !CheckItem(entity.Name);
+                else
+                {
+                    if (!noNames.Contains(entity.Name))
+                    {
+                        noNames.Add(entity.Name);
+                        noNamesStr += entity.Name.Replace("\0", "")  + "---";
+                    }
+                }
+                return true;
             }
+            
+
+            return false;
+        }
+
+        List<string> noNames = new List<string>();
+        string noNamesStr = "";
+
+        private bool CheckItem(string name)
+        {
+            if (checkedListBox1.CheckedItems.Contains(name))
+                return true;
+            if (checkedListBox2.CheckedItems.Contains(name))
+                return true;
+            if (checkedListBox3.CheckedItems.Contains(name))
+                return true;
+            if (checkedListBox4.CheckedItems.Contains(name))
+                return true;
+            if (checkedListBox5.CheckedItems.Contains(name))
+                return true;
+            if (checkedListBox6.CheckedItems.Contains(name))
+                return true;
+            if (checkedListBox7.CheckedItems.Contains(name))
+                return true;
+            if (checkedListBox8.CheckedItems.Contains(name))
+                return true;
+            if (checkedListBox9.CheckedItems.Contains(name))
+                return true;
+            if (checkedListBox10.CheckedItems.Contains(name))
+                return true;
 
             return false;
         }
@@ -324,18 +369,18 @@ namespace DriverUserInterface
                     Distance = distance,
                     Position = worldPosition,
                     Name = entityName,
-                    EntityType = entityName == "dayzplayer" ? EntityType.Player : EntityType.None
+                    EntityType = entityName == "dayzplayer" ? EntityType.Player : entityName == "dayzinfected" ? EntityType.Zombie : EntityType.None
                 });
             }
 
             EntityTable = _driver.ReadVirtualMemory<long>(World + DayzOffs.FarEntityTable);
             for (int i = 0; i < FarTableSize; i++)
             {
-                if (EntityTable == 0) 
+                if (EntityTable == 0)
                     continue;
 
                 long Entity = _driver.ReadVirtualMemory<long>(EntityTable + (i * 0x8));
-                if (Entity == 0) 
+                if (Entity == 0)
                     continue;
 
                 int networkId = _driver.ReadVirtualMemory<int>(Entity + DayzOffs.Network);
@@ -360,7 +405,7 @@ namespace DriverUserInterface
                 float size = (float)Math.Ceiling(25 * (1000 - distance) / 1000);
                 Entities.Add(new DrawingEntity()
                 {
-                    DrawRect = new RectangleF(screenPosition.x - size/2, screenPosition.y- size/2, size, size),
+                    DrawRect = new RectangleF(screenPosition.x - size / 2, screenPosition.y - size / 2, size, size),
                     TextRect = new RectangleF(screenPosition.x - size / 2, screenPosition.y + size / 2, 150, 18),
                     Distance = distance,
                     Position = worldPosition,
@@ -372,11 +417,11 @@ namespace DriverUserInterface
             EntityTable = _driver.ReadVirtualMemory<long>(World + DayzOffs.ItemTables);
             for (int i = 0; i < ItemsTableSize; i++)
             {
-                if (EntityTable == 0) 
+                if (EntityTable == 0)
                     continue;
 
                 long Entity = _driver.ReadVirtualMemory<long>(EntityTable + (i * 0x10));
-                if (Entity < 10) 
+                if (Entity < 10)
                     continue;
 
                 long visualStatePointer = _driver.ReadVirtualMemory<long>(Entity + 0x198);
@@ -391,8 +436,11 @@ namespace DriverUserInterface
 
                 var firstPointer = _driver.ReadVirtualMemory<long>(Entity + 0x8);
                 var secondPointer = _driver.ReadVirtualMemory<long>(firstPointer + 0x10);
-                var entityName = _driver.ReadVirtualMemoryString(secondPointer, 20).ToString();
+                var entityName = _driver.ReadVirtualMemoryString(secondPointer, 20).ToString().Replace("\0","");
                 float size = (float)Math.Ceiling(25 * (1000 - distance) / 1000);
+
+                //if (entityName == "NULL")
+                //    continue;
 
                 Entities.Add(new DrawingEntity()
                 {
@@ -400,7 +448,7 @@ namespace DriverUserInterface
                     TextRect = new RectangleF(screenPosition.x - size / 2, screenPosition.y + size / 2, 150, 18),
                     Distance = distance,
                     Position = worldPosition,
-                    Name = entityName,
+                    Name = Regex.Replace(entityName, @"[^0-9a-zA-Z_]+", ""),
                     EntityType = EntityType.Loot
                 });
             }
@@ -421,6 +469,7 @@ namespace DriverUserInterface
             _showSettings = !_showSettings;
             button1.Visible = _showSettings;
             button4.Visible = _showSettings;
+            button5.Visible = _showSettings;
             button7.Visible = _showSettings;
             button8.Visible = _showSettings;
             button9.Visible = _showSettings;
@@ -483,7 +532,94 @@ namespace DriverUserInterface
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            Overlay_SharpDX_Load(sender,e);
+            Overlay_SharpDX_Load(sender, e);
+        }
+
+        private void checkedListBox1_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            var checkListBox = sender as CheckedListBox;
+            if (checkListBox.SelectedIndex == 0)
+            {
+                checkListBox.SelectedIndex = -1;
+                for (int i = 1; i < checkListBox.Items.Count; i++)
+                    checkListBox.SetItemChecked(i, e.NewValue == CheckState.Checked);
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            _showMap = !_showMap;
+            pictureBox1.Visible = _showMap;
+
+            if (_showMap)
+            {
+                _mapDrawingThread = new Thread(new ThreadStart(DrawMap));
+                _mapDrawingThread.Start();
+            }else
+            {
+                _mapDrawingThread.Abort();
+            }
+        }
+
+        private void DrawMap()
+        {
+            while (true)
+            {
+                try
+                {
+                    pictureBox1.BeginInvoke(new Action(() => pictureBox1.Image = _map));
+                    var g = pictureBox1.CreateGraphics();
+                    var _playerPos = GetPlayerPos();
+                    var _playerDir = GetPlayerDir();
+                    System.Numerics.Vector2 otnPlayerPos = new System.Numerics.Vector2(_playerPos.X / _maxCoords.x, _playerPos.Y / _maxCoords.y);
+                    System.Numerics.Vector2 ScreenPlayerPos = new System.Numerics.Vector2(g.VisibleClipBounds.Width * otnPlayerPos.X, g.VisibleClipBounds.Height - g.VisibleClipBounds.Height * otnPlayerPos.Y);
+                    var normDirVector = System.Numerics.Vector2.Normalize(new System.Numerics.Vector2(_playerDir.X, _playerDir.Y));
+
+
+                    g.DrawEllipse(new System.Drawing.Pen(System.Drawing.Color.Red, 1), new System.Drawing.RectangleF(new System.Drawing.Point((int)ScreenPlayerPos.X - 4, (int)ScreenPlayerPos.Y - 4), new System.Drawing.SizeF(8, 8)));
+                    g.DrawLine(new System.Drawing.Pen(System.Drawing.Color.Red, 2), new System.Drawing.Point((int)ScreenPlayerPos.X, (int)ScreenPlayerPos.Y),
+                        new System.Drawing.Point((int)ScreenPlayerPos.X + (int)(normDirVector.X * 20), (int)ScreenPlayerPos.Y + (int)(-normDirVector.Y * 20)));
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }
+        }
+
+        private System.Numerics.Vector3 GetPlayerPos()
+        {
+            var offset = PosOffs1;
+
+            if (_gameProcess != null)
+            {
+                var id = (long)_gameProcess.Id;
+                var X = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset);
+                var Z = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset + 4);
+                var Y = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset + 8);
+
+                return new System.Numerics.Vector3(X, Y, Z);
+
+            }
+            return System.Numerics.Vector3.Zero;
+        }
+
+        private System.Numerics.Vector3 GetPlayerDir()
+        {
+            var offset = PosOffs1;
+
+            if (_gameProcess != null)
+            {
+                var id = (long)_gameProcess.Id;
+                var X = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset + 12);
+                var Z = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset + 16);
+                var Y = _driver.ReadVirtualMemory<float>(id, _baseAddres + offset + 20);
+
+
+                return new System.Numerics.Vector3(X, Y, Z);
+
+            }
+            return System.Numerics.Vector3.Zero;
         }
     }
 }
