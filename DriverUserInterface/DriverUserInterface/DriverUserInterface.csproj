@@ -92,6 +92,12 @@
     <Compile Include="DayzOffs.cs" />
     <Compile Include="DayzSDK.cs" />
     <Compile Include="DyzAllItems.cs" />
+    <Compile Include="EFT.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EFT.Designer.cs">
+      <DependentUpon>EFT.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -99,8 +105,14 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="KernalInterface.cs" />
+    <Compile Include="OverlayForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="EFT.resx">
+      <DependentUpon>EFT.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
